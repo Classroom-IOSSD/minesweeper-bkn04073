@@ -26,18 +26,19 @@
 // global variables
 // game table
 unsigned char table_array[MAX][MAX];
-// location of cursor
+// Initial location of cursor
 int x=0, y=0;
 // flag: input mode = 0, flag mode = 1, check mode = 2
-int game_mode=0;
+enum mode {input_mode, flag_mode, check_mode};
 
 /*This is a recursive function which uncovers blank cells while they are adjacent*/
 int uncover_blank_cell(int row, int col) {
     int value, rows[8], columns[8], i;
-
-    if(table_array[row][col] != 0)
+    enum mode game_mode;
+    //use enumeration type
+    if(table_array[row][col] != 0) {
         return 0; // error
-
+    }
     table_array[row][col] += 10; // uncover current cell
 
     // Get position of adjacent cells of current cell
@@ -81,10 +82,10 @@ void print_table() {
     for(i = 0; i < MAX; i++) {
         for(j = 0; j < MAX; j++) {
             if(x == j && y == i) {
-                if(game_mode == 1) {
+                if(game_mode == flag_mode) {
                     printf("|%sF%s",BMAG,KNRM);
                     continue;
-                } else if(game_mode == 2) {
+                } else if(game_mode == check_mode) {
                     printf("|%sC%s",BMAG,KNRM);
                     continue;
                 }
@@ -110,11 +111,11 @@ void print_table() {
     }
 
     printf("cell values: 'X' unknown, '%s0%s' no mines close, '1-8' number of near mines, '%sF%s' flag in cell\n",KCYN,KNRM,KGRN,KNRM);
-    if(game_mode == 0) {
+    if(game_mode == input_mode) {
         printf("f (put/remove Flag in cell), c (Check cell), n (New game), q (Exit game): ");
-    } else if(game_mode == 1) {
+    } else if(game_mode == flag_mode) {
         printf("Enter (select to put/remove Flag in cell), q (Exit selection): ");
-    } else if(game_mode == 2) {
+    } else if(game_mode == check_mode) {
         printf("Enter (select to check cell), q (Exit selection): ");
     }
 
@@ -200,8 +201,9 @@ new_game:
 
 
 flag_mode:
-            game_mode = 1;
-            do {
+            game_mode = flag_mode;
+            
+            while (direction != 'q' && direction != 'Q') {
                 print_table();
                 direction = getch();
                 // arrow direction
@@ -232,8 +234,7 @@ flag_mode:
                     if(nMines == 0)
                         break;
                 }
-            } while (direction != 'q' && direction != 'Q');
-            game_mode = 0;
+            game_mode = input_mode;
 
             break;
 
@@ -243,7 +244,8 @@ flag_mode:
 
 check_mode:
             game_mode = 2;
-            do {
+          
+            while (direction != 'q' && direction != 'Q') {
                 print_table();
                 direction = getch();
 
@@ -273,7 +275,7 @@ check_mode:
 
                     //	break;
                 }
-            } while (direction != 'q' && direction != 'Q');
+	    }
             game_mode = 0;
 
             break;
@@ -307,7 +309,7 @@ end_of_game:
     else
         printf("BOOM! you LOOSE!\n");
 
-    do {
+    while(1) {
         printf("Are you sure to exit? (y or n)? ");
         ch = getch();
         putchar('\n');
@@ -317,10 +319,9 @@ end_of_game:
             goto new_game;
         }
         printf("Please answer y or n\n");
-    } while(1);
     printf("See you next time!\n");
 
     fflush(stdin);
-
+    }
     return 0;
 }
